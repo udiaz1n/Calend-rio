@@ -1,0 +1,131 @@
+body {
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: #f4f4f4;
+  }
+  
+  .container {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  
+  }
+  
+  .calendar {
+    width: 400px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    background-color: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    background-color: #ff000094;
+    border-bottom: 1px solid #f1ee0d56;
+  }
+  
+  .header h2 {
+    margin: 0;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #4a6572;
+  }
+  
+  .rounded {
+    border: none;
+    background-color: #4a657270;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .rounded:hover {
+    background-color: #d0d0d0;
+  }
+  
+  .weekdays, .days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+  }
+  
+  .weekdays div {
+    padding: 12px;
+    font-weight: bold;
+    color: #555;
+    background-color: #e0f2f7;
+  }
+  
+  .days div {
+    padding: 15px;
+    border: 1px solid #eee;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .days div:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .days div.active {
+    background-color: #e8f5e9;
+    color: #388e3c;
+  }
+  
+  .event-form {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 30px;
+    width: 400px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  }
+  
+  .event-form h2 {
+    margin-top: 0;
+    font-size: 1.6em;
+    margin-bottom: 25px;
+    color: #4a6572;
+    text-align: center;
+  }
+  
+  .rounded-input {
+    width: calc(100% - 26px);
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+  }
+  
+  .form-buttons {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 25px;
+  }
+  
+  .fixed-date {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 1vh;
+    border-radius: 5px;
+    font-family: 'Arial', sans-serif;
+    opacity: 0.7;
+    font-size: 1vw;
+}
