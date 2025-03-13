@@ -22,3 +22,12 @@ HTML, CSS, JavaScript.
 
 Objetivo: Criar uma ferramenta de agenda pessoal simples e eficaz, acessível através de qualquer navegador web, para ajudar os usuários a organizar seus compromissos e tarefas de forma intuitiva."
 
+Autor:
+
+David Dias
+
+Contato:
+
+Github: udiaz1n
+
+LinkedIn: https://www.linkedin.com/in/david-dias1/
