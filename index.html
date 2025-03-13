@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Calendário Agenda</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            position: fixed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+        }
+
+        .calendar {
+            width: 400px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            background-color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #ff000094;
+            border-bottom: 1px solid #f1ee0d56;
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4a6572;
+        }
+
+        .rounded {
+            border: none;
+            background-color: #4a657270;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .rounded:hover {
+            background-color: #d0d0d0;
+        }
+
+        .weekdays, .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+        }
+
+        .weekdays div {
+            padding: 12px;
+            font-weight: bold;
+            color: #555;
+            background-color: #e0f2f7;
+        }
+
+        .days div {
+            padding: 15px;
+            border: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .days div:hover {
+            background-color: #f0f0f0;
+        }
+
+        .days div.active {
+            background-color: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .event-form {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 30px;
+            width: 400px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .event-form h2 {
+            margin-top: 0;
+            font-size: 1.6em;
+            margin-bottom: 25px;
+            color: #4a6572;
+            text-align: center;
+        }
+
+        .rounded-input {
+            width: calc(100% - 26px);
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .form-buttons {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+
+        .fixed-date {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 1vh;
+            border-radius: 5px;
+            font-family: 'Arial', sans-serif;
+            opacity: 0.7;
+            font-size: 1vw;
+        }
+        .time-container{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="calendar">
+            <div class="header">
+                <button id="prevMonth" class="rounded">&lt;</button>
+                <h2 id="monthYear"></h2>
+                <button id="nextMonth" class="rounded">&gt;</button>
+            </div>
+            <div class="weekdays">
+                <div>Dom</div>
+                <div>Seg</div>
+                <div>Ter</div>
+                <div>Qua</div>
+                <div>Qui</div>
+                <div>Sex</div>
+                <div>Sáb</div>
+            </div>
+            <div class="days" id="days"></div>
+        </div>
+
+        <div class="event-form" id="eventForm" style="display: none;">
+            <h2 style="text-align: center; color: #4a6572;">Adicionar Evento</h2>
+            <input type="text" id="eventTitle" placeholder="Título do Evento" class="rounded-input">
+            <input type="text" id="eventGuests" placeholder="Convidar participantes" class="rounded-input">
+            <input type="date" id="eventDate" class="rounded-input">
+            <div class="time-container">
+                <input type="time" id="startTime" class="rounded-input">
+                <span>até</span>
+                <input type="time" id="endTime" class="rounded-input">
+            </div>
+            <textarea id="eventDescription" placeholder="Adicionar descrição" class="rounded-input"></textarea>
+            <input type="file" id="eventAttachment" style="display: none;">
+            <button id="addAttachmentButton" class="rounded">Anexar Arquivo</button>
+            <div id="attachmentPreview" style="display: none;"></div>
+            <div class="form-buttons">
+                <button id="saveEvent" class="rounded">Salvar</button>
+                <button id="cancelEvent" class="rounded">Cancelar</button>
+            </div>
+        </div>
+
+        <div class="event-details" id="eventDetails" style="display: none;">
+            <h3>Detalhes do Evento</h3>
+            <h4 id="detailsTitle"></h4>
+            <p id="detailsDateTime"></p>
+            <p id="detailsGuests"></p>
+            <p id="detailsDescription"></p>
+            <div id="detailsAttachmentPreview"></div>
+            <div class="details-buttons">
+                <button id="editEvent" class="rounded">Editar</button>
+                <button id="deleteEvent" class="rounded">Apagar</button>
+                <button id="closeDetails" class="rounded">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="getDate" class="fixed-date"></div>
+
+    <script>
+        const monthYear = document.getElementById('monthYear');
+        const daysContainer = document.getElementById('days');
+        const prevMonthBtn = document.getElementById('prevMonth');
+        const nextMonthBtn = document.getElementById('nextMonth');
+        const eventForm = document.getElementById('eventForm');
+        const eventTitleInput = document.getElementById('eventTitle');
+        const eventGuestsInput = document.getElementById('eventGuests');
+        const eventDateInput = document.getElementById('eventDate');
+        const startTimeInput = document.getElementById('startTime');
+        const endTimeInput = document.getElementById('endTime');
+        const eventDescriptionInput = document.getElementById('eventDescription');
+        const saveEventBtn = document.getElementById('saveEvent');
+        const cancelEventBtn = document.getElementById('cancelEvent');
+        const eventDetails = document.getElementById('eventDetails');
+        const detailsTitle = document.getElementById('detailsTitle');
+        const detailsDateTime = document.getElementById('detailsDateTime');
+        const detailsGuests = document.getElementById('detailsGuests');
+        const detailsDescription = document.getElementById('detailsDescription');
+        const closeDetails = document.getElementById('closeDetails');
+        const deleteEventBtn = document.getElementById('deleteEvent');
+        const addAttachmentButton = document.getElementById('addAttachmentButton');
+        const eventAttachmentInput = document.getElementById('eventAttachment');
+        const attachmentPreview = document.getElementById('attachmentPreview');
+        const detailsAttachmentPreview = document.getElementById('detailsAttachmentPreview');
+        const editEventBtn= document.getElementById('editEvent');
+
+let currentDate = new Date();
+let selectedDate = null;
+let calendarEvents = {};
+let selectedAttachment = null;
+let selectedAttachmentPreview = null;
+
+function saveData() {
+    try {
+        localStorage.setItem('calendarEvents', JSON.stringify(calendarEvents));
+    } catch (error) {
+        console.error('Erro ao salvar eventos:', error);
+        alert('Erro ao salvar eventos. Por favor, tente novamente.');
+    }
+}
+
+window.onload = function () {
+    try {
+        if (localStorage.getItem('calendarEvents') === null) {
+            calendarEvents = {};
+            saveData();
+        } else {
+            calendarEvents = JSON.parse(localStorage.getItem('calendarEvents'));
+        }
+    } catch (error) {
+        console.error('Erro ao carregar eventos:', error);
+        alert('Erro ao carregar eventos. Os eventos podem não ser exibidos corretamente.');
+    }
+
+    renderCalendar();
+    updateDate();
+    setInterval(updateDate, 1000);
+
+    addAttachmentButton.addEventListener('click', () => {
+        eventAttachmentInput.click();
+    });
+
+    eventAttachmentInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            selectedAttachment = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                selectedAttachmentPreview = e.target.result;
+                attachmentPreview.innerHTML = `<img src="${selectedAttachmentPreview}" style="max-width: 100px;">`;
+                attachmentPreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+};
+
+function generateEventId() {
+    return Math.random().toString(36).substr(2, 9);
+}
+
+function renderCalendar() {
+    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+    const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+    const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+    monthYear.textContent = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+    daysContainer.innerHTML = '';
+
+    for (let i = 0; i < firstDayOfMonth; i++) {
+        daysContainer.innerHTML += '<div></div>';
+    }
+
+    for (let i = 1; i <= daysInMonth; i++) {
+        const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), i);
+        const dateStr = date.toISOString().split('T')[0];
+        const hasEvent = calendarEvents[dateStr] && calendarEvents[dateStr].length > 0;
+        const dayElement = document.createElement('div');
+        dayElement.textContent = i;
+        if (hasEvent) {
+            dayElement.classList.add('active');
+        }
+        dayElement.addEventListener('click', () => {
+            selectedDate = date;
+            if (hasEvent) {
+                showEventDetails(calendarEvents[dateStr][0]);
+            } else {
+                showEventForm();
+            }
+        });
+        daysContainer.appendChild(dayElement);
+    }
+}
+
+function showEventForm() {
+    eventForm.style.display = 'block';
+    eventTitleInput.value = '';
+    eventGuestsInput.value = '';
+    eventDateInput.value = '';
+    startTimeInput.value = '';
+    endTimeInput.value = '';
+    eventDescriptionInput.value = '';
+    selectedAttachment = null;
+    selectedAttachmentPreview = null;
+    attachmentPreview.innerHTML = '';
+    attachmentPreview.style.display = 'none';
+
+    if (selectedDate) {
+        const year = selectedDate.getFullYear();
+        const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+        const day = String(selectedDate.getDate()).padStart(2, '0');
+        eventDateInput.value = `<span class="math-inline">\{year\}\-</span>{month}-${day}`;
+    }
+}
+
+function hideEventForm() {
+    eventForm.style.display = 'none';
+}
+
+function saveEvent(eventId) {
+    const title = eventTitleInput.value;
+    const guests = eventGuestsInput.value;
+    const date = eventDateInput.value;
+    const startTime = startTimeInput.value;
+    const endTime = endTimeInput.value;
+    const description = eventDescriptionInput.value;
+
+    if (title && date && startTime && endTime) {
+        const dateTime = `<span class="math-inline">\{date\}T</span>{startTime}`;
+        const eventData = {
+            id: eventId || generateEventId(),
+            title: title,
+            guests: guests,
+            dateTime: dateTime,
+            endTime: `<span class="math-inline">\{date\}T</span>{endTime}`,
+            description: description,
+            attachment: selectedAttachment ? selectedAttachment.name : null,
+            attachmentPreview: selectedAttachmentPreview
+        };
+
+        const dateStr = selectedDate.toISOString().split('T')[0];
+        if (!calendarEvents[dateStr]) {
+            calendarEvents[dateStr] = [];
+        }
+
+        calendarEvents[dateStr] = calendarEvents[dateStr].filter(event => event.id !== eventId);
+        calendarEvents[dateStr].push(eventData);
+
+        saveData();
+        hideEventForm();
+        renderCalendar();
+    }
+}
+
+function showEventDetails(event) {
+    detailsTitle.textContent = event.title;
+    detailsDateTime.textContent = new Date(event.dateTime).toLocaleString() + ' - ' + new Date(event.endTime).toLocaleTimeString();
+    detailsGuests.textContent = event.guests ? 'Convidados: ' + event.guests : 'Não há participantes.';
+    detailsDescription.textContent = event.description;
+    if (event.attachmentPreview) {
+        detailsAttachmentPreview.innerHTML = `<img src="${event.attachmentPreview}" style="max-width: 100px;">`;
+    } else {
+        detailsAttachmentPreview.innerHTML = '';
+    }
+    eventDetails.style.display = 'block';
+    eventDetails.currentEvent = event;
+}
+
+function hideEventDetails() {
+    eventDetails.style.display = 'none';
+}
+
+function deleteEvent() {
+    const dateStr = selectedDate.toISOString().split('T')[0];
+    const eventToDelete = eventDetails.currentEvent;
+
+    if (calendarEvents[dateStr]) {
+        calendarEvents[dateStr] = calendarEvents[dateStr].filter(event => event.id !== eventToDelete.id);
+        if (calendarEvents[dateStr].length === 0) {
+            delete calendarEvents[dateStr];
+        }
+        saveData();
+        hideEventDetails();
+        renderCalendar();
+    }
+}
+
+prevMonthBtn.addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+});
+
+nextMonthBtn.addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+});
+
+saveEventBtn.addEventListener('click', () => {
+    saveEvent();
+});
+cancelEventBtn.addEventListener('click', hideEventForm);
+closeDetails.addEventListener('click', hideEventDetails);
+deleteEventBtn.addEventListener('click', deleteEvent);
+
+editEventBtn.addEventListener('click', () => {
+    const eventToEdit = eventDetails.currentEvent;
+    showEventForm();
+
+    eventTitleInput.value = eventToEdit.title;
+    eventGuestsInput.value = eventToEdit.guests;
+
+    const eventDate = new Date(eventToEdit.dateTime);
+    const eventEndDate = new Date(eventToEdit.endTime);
+
+    const year = eventDate.getFullYear();
+    const month = String(eventDate.getMonth() + 1).padStart(2, '0');
+    const day = String(eventDate.getDate()).padStart(2, '0');
+    const hours = String(eventDate.getHours()).padStart(2, '0');
+    const minutes = String(eventDate.getMinutes()).padStart(2, '0');
+    const endHours = String(eventEndDate.getHours()).padStart(2, '0');
+    const endMinutes = String(eventEndDate.getMinutes()).padStart(2, '0');
+
+    eventDateInput.value = `<span class="math-inline">\{year\}\-</span>{month}-${day}`;
+    startTimeInput.value = `<span class="math-inline">\{hours\}\:</span>{minutes}`;
+    endTimeInput.value = `<span class="math-inline">\{endHours\}\:</span>{endMinutes}`;
+
+    eventDescriptionInput.value = eventToEdit.description;
+    selectedAttachmentPreview = eventToEdit.attachmentPreview;attachmentPreview.innerHTML = selectedAttachmentPreview ? `<img src="${selectedAttachmentPreview}" style="max-width: 100px;">` : '';
+            attachmentPreview.style.display = !!selectedAttachmentPreview;
+
+            saveEvent(eventToEdit.id);
+        });
+
+        function updateDate() {
+            const dateElement = document.getElementById('getDate');
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            dateElement.textContent = now.toLocaleDateString('pt-BR', options);
+        }
+    </script>
+</body>
+</html>
